@@ -1,4 +1,4 @@
-const {Admin, User, Car} = require('../models/models')
+const {Admin, User, Car, Request} = require('../models/models')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const ApiError = require('../error/ApiError')
@@ -137,13 +137,13 @@ class adminController{
                 production_year,
             },
             {
-                where: {id: id}
+                where: {id}
             })
         return res.status(200).json("OK");
     }
     async carRegister(req,res,next) {
-        const {manufacturer, model, price, production_year} = req.body
-        if(!manufacturer || !model || !price || !production_year ){
+        const {manufacturer, model, price, production_year, onRequest} = req.body
+        if(!manufacturer || !model || !price || !production_year || !onRequest ){
             return next(ApiError.badRequest('Invalid data'))
         }
         const token = uuidv4()
@@ -156,6 +156,7 @@ class adminController{
                 user_token,
                 price,
                 production_year,
+                onRequest,
             })
         return res.status(200).json("OK");
     }
@@ -224,5 +225,38 @@ class adminController{
             })
         return res.status(200).json("OK");
     }
+    async getCarRequest(req,res,next){
+        const {id} = req.body
+        const request = Request.findOne({where:{id}})
+        if(!request){
+            return next(ApiError.badRequest('Wrong request id!'))
+        }
+        return res.json(request)
+    }
+    async getAllCarRequests(req,res){
+        let {limit,page} = req.query
+        page = page || 1
+        limit = limit || 10
+        let offset = page*limit - limit
+        let request;
+        request = await Request.findAll({where:{limit,offset}})
+        return res.json(request)
+    }
+    async acceptCarRequest(req,res){
+
+    }
+    async denyCarRequest(req,res){}
+    async editCarRequest(req,res){}
+    async editAdmin(req,res){}
+    async editAdminPassword(req,res){}
+    async getAllAdmins(req,res){}
+    async getAdmin(req,res){}
+    async getAllUsers(req,res){}
+    async editBooking(req,res){}
+    async removeBooking(req,res){}
+    async viewBookingByUser(req,res){}
+    async viewBookingByCar(req,res){}
+    async getBooking(req,res){}
+
 }
 module.exports = new adminController()

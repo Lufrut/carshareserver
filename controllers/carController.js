@@ -1,6 +1,5 @@
 class carController{
-    async auth(req,res){
-
-    }
+    async updateCarUserToken(req,res){}
+    async sendLocation(req,res){}
 }
 module.exports = new carController()

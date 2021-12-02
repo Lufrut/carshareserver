@@ -8,6 +8,7 @@ const Car = sequelize.define('car',{
     user_token:{type: DataTypes.STRING},
     price:{type: DataTypes.INTEGER},
     production_year:{type: DataTypes.INTEGER},
+    onRequest:{type:DataTypes.BOOLEAN}
 })
 const User = sequelize.define('user',{
     id:{type: DataTypes.INTEGER, primaryKey: true, autoIncrement:true},
@@ -25,10 +26,8 @@ const Rent = sequelize.define('rent',{
     user_id:{type: DataTypes.INTEGER},
     car_id:{type: DataTypes.INTEGER},
     user_token:{type: DataTypes.STRING},
-    start_rent_time:{type: DataTypes.STRING},
-    end_rent_time:{type: DataTypes.STRING},
-    start_rent_date:{type: DataTypes.STRING},
-    end_rent_date:{type: DataTypes.STRING},
+    start_rent_time:{type: DataTypes.DATE},
+    end_rent_time:{type: DataTypes.DATE},
     cost:{type: DataTypes.INTEGER}
 })
 const Admin = sequelize.define('admin',{
@@ -44,10 +43,8 @@ const Request = sequelize.define('request',{
     user_id:{type: DataTypes.INTEGER},
     user_token:{type: DataTypes.STRING},
     reason:{type: DataTypes.STRING},
-    start_rent_time:{type: DataTypes.STRING},
-    end_rent_time:{type: DataTypes.STRING},
-    start_rent_date:{type: DataTypes.STRING},
-    end_rent_date:{type: DataTypes.STRING},
+    start_rent_time:{type: DataTypes.DATE},
+    end_rent_time:{type: DataTypes.DATE},
 })
 
 User.hasMany(Rent)
