@@ -245,9 +245,68 @@ class adminController{
     async acceptCarRequest(req,res){
 
     }
-    async denyCarRequest(req,res){}
-    async editCarRequest(req,res){}
-    async editAdmin(req,res){}
+    async denyCarRequest(req,res){
+        const {id} = req.body
+        const request = await Request.findOne({where: {id}})
+        await request.destroy()
+        return res.status(200).json("OK");
+    }
+    async editCarRequest(req,res,next){
+        const {id, car_id, user_id, reason, start_rent_time, end_rent_time} = req.body
+        if(!id || !car_id || !user_id || !reason || !start_rent_time || !end_rent_time){
+            return next(ApiError.badRequest('Wrong data!'))
+        }
+        const request = await Request.findOne({where: {id}})
+        const user = await  User.findOne({where: {user_id}})
+        const user_token = user.token
+        if(!request){
+            return next(ApiError.badRequest('Wrong request id!'))
+        }
+        if(!user){
+            return next(ApiError.badRequest('Wrong user_id!'))
+        }
+        await Request.update(
+            {
+                car_id,
+                user_id,
+                user_token,
+                reason,
+                start_rent_time,
+                end_rent_time,
+            },
+            {
+                where: {id}
+            })
+        return res.status(200).json("OK");
+    }
+    async editAdmin(req,res){
+        const {id, car_id, user_id, reason, start_rent_time, end_rent_time} = req.body
+        if(!id || !car_id || !user_id || !reason || !start_rent_time || !end_rent_time){
+            return next(ApiError.badRequest('Wrong data!'))
+        }
+        const request = await Request.findOne({where: {id}})
+        const user = await  User.findOne({where: {user_id}})
+        const user_token = user.token
+        if(!request){
+            return next(ApiError.badRequest('Wrong request id!'))
+        }
+        if(!user){
+            return next(ApiError.badRequest('Wrong user_id!'))
+        }
+        await Request.update(
+            {
+                car_id,
+                user_id,
+                user_token,
+                reason,
+                start_rent_time,
+                end_rent_time,
+            },
+            {
+                where: {id}
+            })
+        return res.status(200).json("OK");
+    }
     async editAdminPassword(req,res){}
     async getAllAdmins(req,res){}
     async getAdmin(req,res){}
