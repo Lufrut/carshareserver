@@ -24,10 +24,10 @@ router.post('/editAdminPassword',checkAdminLevelMiddleware(1), adminController.e
 router.get('/getAllAdmins',checkAdminLevelMiddleware(1), adminController.getAllAdmins)
 router.get('/getAdmin',checkAdminLevelMiddleware(1), adminController.getAdmin)
 router.get('/getAllUsers',authAdminMiddleware,adminController.getAllUsers)
-router.post('/editBooking',authAdminMiddleware,adminController.editBooking)
-router.post('/removeBooking',authAdminMiddleware,adminController.removeBooking)
-router.get('/viewBookingByUser',authAdminMiddleware,adminController.viewBookingByUser)
-router.get('/viewBookingByCar',authAdminMiddleware,adminController.viewBookingByCar)
-router.get('/getBooking',authAdminMiddleware,adminController.getBooking)
+//router.post('/editBooking',authAdminMiddleware,adminController.editBooking)
+//router.post('/removeBooking',authAdminMiddleware,adminController.removeBooking)
+//router.get('/viewBookingByUser',authAdminMiddleware,adminController.viewBookingByUser)
+//router.get('/viewBookingByCar',authAdminMiddleware,adminController.viewBookingByCar)
+//router.get('/getBooking',authAdminMiddleware,adminController.getBooking)
 
 module.exports = router

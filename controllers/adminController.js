@@ -1,8 +1,9 @@
-const {Admin, User, Car, Request} = require('../models/models')
+const {Admin, User, Car, Request, Rent} = require('../models/models')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const ApiError = require('../error/ApiError')
 const { v4: uuidv4 } = require('uuid');
+const {Op} = require("sequelize");
 
 const generateJWT = (id,email,level)=>{
     return jwt.sign(
@@ -242,8 +243,37 @@ class adminController{
         request = await Request.findAll({where:{limit,offset}})
         return res.json(request)
     }
-    async acceptCarRequest(req,res){
-
+    async acceptCarRequest(req,res,next){
+        let {car_id,start_rent_time,end_rent_time,user_id}=req.body
+        start_rent_time = new Date(start_rent_time)
+        end_rent_time = new Date(end_rent_time)
+        const car = await Car.findOne({where:{car_id}})
+        if(!car){
+            return next(ApiError.badRequest('Invalid car_id'))
+        }
+        await Rent.destroy(
+            {
+                where:{
+                    [Op.between]:[{start_rent_time: start_rent},{start_rent_time: end_rent}],
+                    car_id,
+                }})
+        const user = await User.findOne({where:{user_id}})
+        if(!user){
+            return next(ApiError.badRequest('Invalid token or user'))
+        }
+        if(!car_id || !start_rent_time || !end_rent_time){
+            return next(ApiError.badRequest('Invalid data'))
+        }
+        await Rent.create(
+            {
+                user_id:user.id,
+                car_id,
+                user_token:user.token,
+                start_rent_time,
+                end_rent_time,
+                cost:0,
+            }
+        )
     }
     async denyCarRequest(req,res){
         const {id} = req.body
@@ -279,43 +309,71 @@ class adminController{
             })
         return res.status(200).json("OK");
     }
-    async editAdmin(req,res){
-        const {id, car_id, user_id, reason, start_rent_time, end_rent_time} = req.body
-        if(!id || !car_id || !user_id || !reason || !start_rent_time || !end_rent_time){
+    async editAdmin(req,res,next){
+        const {id, login, email, level} = req.body
+        if(!id || !login || !email || !level){
             return next(ApiError.badRequest('Wrong data!'))
         }
-        const request = await Request.findOne({where: {id}})
-        const user = await  User.findOne({where: {user_id}})
-        const user_token = user.token
-        if(!request){
-            return next(ApiError.badRequest('Wrong request id!'))
+        const admin = await Admin.findOne({where: {id}})
+        if(!admin){
+            return next(ApiError.badRequest('Wrong admin id!'))
         }
-        if(!user){
-            return next(ApiError.badRequest('Wrong user_id!'))
-        }
-        await Request.update(
+        await Admin.update(
             {
-                car_id,
-                user_id,
-                user_token,
-                reason,
-                start_rent_time,
-                end_rent_time,
+                login,
+                email,
+                level,
             },
             {
                 where: {id}
             })
         return res.status(200).json("OK");
     }
-    async editAdminPassword(req,res){}
-    async getAllAdmins(req,res){}
-    async getAdmin(req,res){}
-    async getAllUsers(req,res){}
-    async editBooking(req,res){}
+    async editAdminPassword(req,res,next){
+        const {id,password} = req.body
+        const hash_password = await bcrypt.hash(password,5)
+        const admin = await  Admin.findOne({where:{id}})
+        if(!admin){
+            return next(ApiError.badRequest("Admin with this id not exist"))
+        }
+        await Admin.update(
+            {
+                password:hash_password
+            },
+            {
+                where: {id: id}
+            })
+        return res.status(200).json("OK");
+    }
+    async getAllAdmins(req,res){
+        let {limit,page} = req.query
+        page = page || 1
+        limit = limit || 10
+        let offset = page*limit - limit
+        let admin;
+        admin = await Admin.findAll({where:{limit,offset}})
+        return res.json(admin)
+    }
+    async getAdmin(req,res){
+        const {id} = req.body
+        const admin = Admin.findOne({where:{id}})
+        return res.json(admin)
+    }
+    async getAllUsers(req,res){
+        let {limit,page} = req.query
+        page = page || 1
+        limit = limit || 10
+        let offset = page*limit - limit
+        let user;
+        user = await User.findAll({where:{limit,offset}})
+        return res.json(user)
+    }
+    /* async editBooking(req,res){
+    }
     async removeBooking(req,res){}
     async viewBookingByUser(req,res){}
     async viewBookingByCar(req,res){}
     async getBooking(req,res){}
-
+    */
 }
 module.exports = new adminController()

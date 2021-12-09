@@ -46,6 +46,11 @@ const Request = sequelize.define('request',{
     start_rent_time:{type: DataTypes.DATE},
     end_rent_time:{type: DataTypes.DATE},
 })
+const Location = sequelize.define('location',{
+    id:{type: DataTypes.INTEGER, primaryKey: true, autoIncrement:true},
+    car_id:{type: DataTypes.INTEGER},
+    location:{type: DataTypes.STRING},
+})
 
 User.hasMany(Rent)
 Rent.belongsTo(User)
@@ -62,4 +67,5 @@ module.exports = {
     Admin,
     Rent,
     Request,
+    Location,
 }
