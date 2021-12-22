@@ -61,6 +61,9 @@ Rent.belongsTo(Car)
 User.hasMany(Request)
 Request.belongsTo(User)
 
+Car.hasMany(Location)
+Location.belongsTo(Car)
+
 module.exports = {
     Car,
     User,

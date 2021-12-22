@@ -78,7 +78,7 @@ class adminController{
         limit = limit || 10
         let offset = page*limit - limit
         let cars;
-        cars = await Car.findAll({where:{limit,offset}})
+        cars = await Car.findAndCountAll({where:{limit,offset}})
         return res.json(cars)
     }
     async updateUser(req,res,next){
@@ -240,7 +240,7 @@ class adminController{
         limit = limit || 10
         let offset = page*limit - limit
         let request;
-        request = await Request.findAll({where:{limit,offset}})
+        request = await Request.findAndCountAll({where:{limit,offset}})
         return res.json(request)
     }
     async acceptCarRequest(req,res,next){
@@ -351,7 +351,7 @@ class adminController{
         limit = limit || 10
         let offset = page*limit - limit
         let admin;
-        admin = await Admin.findAll({where:{limit,offset}})
+        admin = await Admin.findAndCountAll({where:{limit,offset}})
         return res.json(admin)
     }
     async getAdmin(req,res){
@@ -365,7 +365,7 @@ class adminController{
         limit = limit || 10
         let offset = page*limit - limit
         let user;
-        user = await User.findAll({where:{limit,offset}})
+        user = await User.findAndCountAll({where:{limit,offset}})
         return res.json(user)
     }
     /* async editBooking(req,res){
