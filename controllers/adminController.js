@@ -254,7 +254,7 @@ class adminController{
         await Rent.destroy(
             {
                 where:{
-                    [Op.between]:[{start_rent_time: start_rent},{start_rent_time: end_rent}],
+                    [Op.between]:[{start_rent_time: start_rent_time},{start_rent_time: end_rent_time}],
                     car_id,
                 }})
         const user = await User.findOne({where:{user_id}})
@@ -367,6 +367,21 @@ class adminController{
         let user;
         user = await User.findAndCountAll({where:{limit,offset}})
         return res.json(user)
+    }
+    async deleteUser(req,res){
+        const {id} = req.params
+        await User.destroy({where:{id:id}})
+        return res.status(200).json("OK");
+    }
+    async deleteCar(req,res){
+        const {id} = req.params
+        await Car.destroy({where:{id:id}})
+        return res.status(200).json("OK");
+    }
+    async deleteAdmin(req,res){
+        const {id} = req.params
+        await Admin.destroy({where:{id:id}})
+        return res.status(200).json("OK");
     }
     /* async editBooking(req,res){
     }
