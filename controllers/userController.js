@@ -57,7 +57,7 @@ class UserController{
             cars.production_year,
         )
     }
-    async getBookByCarForDay(req,res){
+    async getBookByCar(req,res){
         let {start_rent,end_rent,car_id} = req.body
         start_rent= new Date(start_rent)
         end_rent = new Date(end_rent)
@@ -108,6 +108,7 @@ class UserController{
                 cost,
             }
         )
+        return res.status(200).json("OK");
     }
 
     async makeRequest(req,res,next){
@@ -127,6 +128,7 @@ class UserController{
             start_rent_time,
             end_rent_time,
         })
+        return res.status(200).json("OK");
     }
 }
 module.exports = new UserController()

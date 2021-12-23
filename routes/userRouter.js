@@ -8,6 +8,6 @@ router.get('/getAllCars',authUserMiddleware,userController.getALLCars)
 router.post('/bookCar',authUserMiddleware,userController.bookCar)
 router.post('/login',userController.login)
 router.post('/makeRequest',authUserMiddleware,userController.makeRequest)
-router.post('/getBookByCarForDay',authUserMiddleware,userController.getBookByCarForDay)
+router.post('/getBookByCar',authUserMiddleware,userController.getBookByCar)
 
 module.exports = router

@@ -274,6 +274,7 @@ class adminController{
                 cost:0,
             }
         )
+        return res.status(200).json("OK");
     }
     async denyCarRequest(req,res){
         const {id} = req.body
