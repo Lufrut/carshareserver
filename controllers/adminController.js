@@ -167,7 +167,7 @@ class adminController{
         if(!user){
             return next(ApiError.badRequest('Invalid login'))
         }
-        return res.json(user.id,user.credits,user.name,user.lastname,user.phone,user.email)
+        return res.json(user)
     }
     async userRegister(req,res,next) {
         const {login,password,name,lastname,phone,email} = req.body
@@ -175,7 +175,22 @@ class adminController{
             return next(ApiError.badRequest('Invalid data'))
         }
         const hash_password = await bcrypt.hash(password,5)
-        const check = await this.checkUser(login,email)
+        let check;
+        const login_is_Exist = await User.findOne({where: {
+                login: login
+            }})
+        const email_is_Exist = await User.findOne({where: {
+                email: email
+            }})
+        if(email_is_Exist){
+            check = 'User with this email already exists'
+        }
+        else if(login_is_Exist){
+            check =  'User with this login already exists'
+        }
+        else{
+            check = true
+        }
         if(check===true){
 
         } else{
