@@ -18,7 +18,7 @@ const User = sequelize.define('user',{
     password:{type: DataTypes.STRING},
     name:{type: DataTypes.STRING},
     lastname:{type: DataTypes.STRING},
-    phone:{type: DataTypes.INTEGER},
+    phone:{type: DataTypes.STRING},
     email:{type: DataTypes.STRING},
 })
 const Rent = sequelize.define('rent',{
@@ -49,6 +49,7 @@ const Request = sequelize.define('request',{
 const Location = sequelize.define('location',{
     id:{type: DataTypes.INTEGER, primaryKey: true, autoIncrement:true},
     car_id:{type: DataTypes.INTEGER},
+    date:{type: DataTypes.DATE},
     location:{type: DataTypes.STRING},
 })
 

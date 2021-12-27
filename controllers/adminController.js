@@ -27,41 +27,14 @@ class adminController{
         const token = generateJWT(admin.id,admin.email,admin.level)
         return res.json({token})
     }
-    async checkUser(login,email){
-        const login_is_Exist = await User.findOne({where: {
-                login: login
-            }})
-        const email_is_Exist = await User.findOne({where: {
-                email: email
-            }})
-        if(email_is_Exist){
-            return 'User with this email already exists'
-        }
-        else if(login_is_Exist){
-            return 'User with this login already exists'
-        }
-        else{
-            return true
-        }
-    }
-    async checkUserId(id){
-        const check = await User.findOne({where: {
-            id:id
-            }})
-        if(check){
-            return 'Invalid id'
-        } else {
-            return true
-        }
-    }
     async changeUserPassword(req,res,next){
         const {id,password} = req.body
         const hash_password = await bcrypt.hash(password,5)
-        const idCheck = await this.checkUserId()
-        if(idCheck===true){
-
-        } else{
-            return next(ApiError.badRequest(idCheck))
+        const idCheck = await User.findOne({where: {
+                id:id
+            }})
+        if(!idCheck){
+            return next(ApiError.badRequest("User not exist!"))
         }
         await User.update(
             {
@@ -78,7 +51,9 @@ class adminController{
         limit = limit || 10
         let offset = page*limit - limit
         let cars;
-        cars = await Car.findAndCountAll({where:{limit,offset}})
+        cars = await Car.findAndCountAll({
+            attributes:['id','manufacturer','model','production_year','price','onRequest'],
+            where:{},limit,offset})
         return res.json(cars)
     }
     async updateUser(req,res,next){
@@ -86,16 +61,10 @@ class adminController{
         if(!login  || !email || !name || !lastname || !phone ||!credits){
             return next(ApiError.badRequest('Invalid data'))
         }
-        const check = await this.checkUser(login,email)
-        if(check===true){
-
-        } else{
-            return next(ApiError.badRequest(check))
-        }
-        const idCheck = await this.checkUserId()
-        if(idCheck===true){
-
-        } else{
+        const idCheck = User.findOne({where: {
+                id:id
+            }})
+        if(!idCheck){
             return next(ApiError.badRequest(idCheck))
         }
         await User.update(
@@ -163,7 +132,19 @@ class adminController{
     }
     async getUser(req,res,next){
         const {login} = req.body
-        const user = await User.findOne({where: {login}})
+        const user = await User.findOne({
+            attributes:[
+                'id',
+                'token',
+                'credits',
+                'login',
+                'name',
+                'lastname',
+                'phone',
+                'email',
+            ],
+            where: {login}
+        })
         if(!user){
             return next(ApiError.badRequest('Invalid login'))
         }
@@ -191,9 +172,7 @@ class adminController{
         else{
             check = true
         }
-        if(check===true){
-
-        } else{
+        if(check!==true){
             return next(ApiError.badRequest(check))
         }
         const token = uuidv4()
@@ -243,7 +222,10 @@ class adminController{
     }
     async getCarRequest(req,res,next){
         const {id} = req.body
-        const request = Request.findOne({where:{id}})
+        if(!id){
+            return next(ApiError.badRequest('Wrong request id!'))
+        }
+        const request = await Request.findOne({where:{id:id}})
         if(!request){
             return next(ApiError.badRequest('Wrong request id!'))
         }
@@ -255,30 +237,34 @@ class adminController{
         limit = limit || 10
         let offset = page*limit - limit
         let request;
-        request = await Request.findAndCountAll({where:{limit,offset}})
+        request = await Request.findAndCountAll({where:{},limit,offset})
         return res.json(request)
     }
     async acceptCarRequest(req,res,next){
-        let {car_id,start_rent_time,end_rent_time,user_id}=req.body
-        start_rent_time = new Date(start_rent_time)
-        end_rent_time = new Date(end_rent_time)
-        const car = await Car.findOne({where:{car_id}})
+        let {car_id,request_id}=req.body
+        const request = await Request.findOne({where:{id:request_id}})
+        if(!car_id || !request || !request_id){
+            return next(ApiError.badRequest('Invalid data'))
+        }
+        let start_rent_time = new Date(request.start_rent_time)
+        let end_rent_time = new Date(request.end_rent_time)
+        const car = await Car.findOne({where:{id:car_id}})
         if(!car){
             return next(ApiError.badRequest('Invalid car_id'))
         }
         await Rent.destroy(
             {
                 where:{
-                    [Op.between]:[{start_rent_time: start_rent_time},{start_rent_time: end_rent_time}],
+                    start_rent_time:{
+                        [Op.between]:[start_rent_time,end_rent_time],
+                    },
                     car_id,
                 }})
-        const user = await User.findOne({where:{user_id}})
+        const user = await User.findOne({where:{id:request.userId}})
         if(!user){
             return next(ApiError.badRequest('Invalid token or user'))
         }
-        if(!car_id || !start_rent_time || !end_rent_time){
-            return next(ApiError.badRequest('Invalid data'))
-        }
+
         await Rent.create(
             {
                 user_id:user.id,
@@ -291,26 +277,31 @@ class adminController{
         )
         return res.status(200).json("OK");
     }
-    async denyCarRequest(req,res){
+    async denyCarRequest(req,res,next){
         const {id} = req.body
         const request = await Request.findOne({where: {id}})
-        await request.destroy()
+        if(!request){
+            return next(ApiError.badRequest("invalid request id"))
+        }
+        await Request.destroy({where: {id}})
         return res.status(200).json("OK");
     }
     async editCarRequest(req,res,next){
-        const {id, car_id, user_id, reason, start_rent_time, end_rent_time} = req.body
+        let {id, car_id, user_id, reason, start_rent_time, end_rent_time} = req.body
         if(!id || !car_id || !user_id || !reason || !start_rent_time || !end_rent_time){
             return next(ApiError.badRequest('Wrong data!'))
         }
         const request = await Request.findOne({where: {id}})
-        const user = await  User.findOne({where: {user_id}})
-        const user_token = user.token
+        const user = await  User.findOne({where: {id:user_id}})
+        start_rent_time = new Date(start_rent_time)
+        end_rent_time = new Date(end_rent_time)
         if(!request){
             return next(ApiError.badRequest('Wrong request id!'))
         }
         if(!user){
             return next(ApiError.badRequest('Wrong user_id!'))
         }
+        const user_token = user.token
         await Request.update(
             {
                 car_id,
@@ -367,7 +358,12 @@ class adminController{
         limit = limit || 10
         let offset = page*limit - limit
         let admin;
-        admin = await Admin.findAndCountAll({where:{limit,offset}})
+        admin = await Admin.findAndCountAll({
+            attributes:['id','login','email','level'],
+            where:{},
+            limit,
+            offset
+        })
         return res.json(admin)
     }
     async getAdmin(req,res){
@@ -381,21 +377,45 @@ class adminController{
         limit = limit || 10
         let offset = page*limit - limit
         let user;
-        user = await User.findAndCountAll({where:{limit,offset}})
+        user = await User.findAndCountAll({where:{},limit,offset})
         return res.json(user)
     }
-    async deleteUser(req,res){
-        const {id} = req.params
+    async deleteUser(req,res,next){
+        const {id} = req.query
+        if(!id){
+            return next(ApiError.badRequest("Wrong id"))
+        }
+        const user = await User.findOne({where:{id:id}})
+        if(!user)
+        {
+            return next(ApiError.badRequest("User does not exist"))
+        }
         await User.destroy({where:{id:id}})
         return res.status(200).json("OK");
     }
-    async deleteCar(req,res){
-        const {id} = req.params
+    async deleteCar(req,res,next){
+        const {id} = req.query
+        if(!id){
+            return next(ApiError.badRequest("Wrong id"))
+        }
+        const car = await Car.findOne({where:{id:id}})
+        if(!car)
+        {
+            return next(ApiError.badRequest("Car does not exist"))
+        }
         await Car.destroy({where:{id:id}})
         return res.status(200).json("OK");
     }
-    async deleteAdmin(req,res){
-        const {id} = req.params
+    async deleteAdmin(req,res,next){
+        const {id} = req.query
+        if(!id){
+            return next(ApiError.badRequest("Wrong id"))
+        }
+        const admin = await Admin.findOne({where:{id:id}})
+        if(!admin)
+        {
+            return next(ApiError.badRequest("Admin does not exist"))
+        }
         await Admin.destroy({where:{id:id}})
         return res.status(200).json("OK");
     }
